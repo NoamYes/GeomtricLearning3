@@ -4,6 +4,8 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from PIL import Image
 
+from Q1.shortest_paths import eikonal_path_grad
+
 # Prepare the image
 thresh = 180
 image_file_original = Image.open("../HW3_Resources/maze.png")  # open colour image
@@ -32,35 +34,16 @@ plt.contourf(tau_fm)
 
 
 # Section 1.1.b
-def eikonal_path(tau, source, target):
 
-    path = [target]
-    while not path[-1] == source:
-        i = path[-1][0]
-        j = path[-1][1]
-        T_north = tau[i - 1, j] if i > 0 else float('inf')
-        T_south = tau[i + 1, j] if i < dimY - 1 else float('inf')
-        T_east = tau[i, j - 1] if j > 0 else float('inf')
-        T_west = tau[i, j + 1] if j < dimX - 1 else float('inf')
-        tuples = [(i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1)]
-        ind_min = np.argmin([T_north, T_south, T_east, T_west])
-        next_node = tuples[ind_min]
-        path.append(next_node)
-
-    image_file_path = np.copy(image_file_original)
-    path_array = np.array(path)
-    plt.imshow(image_file_path)
-    plt.scatter(path_array[:, 1], path_array[:, 0], s=3, c='red')
-    plt.title('Negative Gradient - Shortest path from ' + str(source) + ' to ' + str(target))
 
 
 x_t = (233, 8)
 plt.figure(2)
-eikonal_path(tau_fm, x_s, x_t)
+eikonal_path_grad(tau_fm, x_s, x_t, image_file_original)
 # plt.show()
 plt.figure(3)
 tau_fm = eikonalfm.fast_marching(c, x_t, dx, order)
-eikonal_path(tau_fm, x_t, x_s)
+eikonal_path_grad(tau_fm, x_t, x_s, image_file_original)
 # plt.show()
 
 # Section 1.1.c
