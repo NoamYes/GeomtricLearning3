@@ -1,66 +1,70 @@
 import numpy as np
-from matplotlib import pyplot as plt
-from PIL import Image 
+import eikonalfm
+import matplotlib.pyplot as plt
+from PIL import Image
 
-thresh = 150 # TODO What value should it be?
-image_file = Image.open("./HW3_Resources/maze.png") # open colour image
-image_file = image_file.convert("L")
+thresh = 180  # TODO What value should it be?
+image_file_original = Image.open("../HW3_Resources/maze.png")  # open colour image
+image_file = image_file_original.convert("L")
 maze_img = np.asarray(image_file).astype('int')
-maze_img = maze_img >= thresh
-maze_img = maze_img.astype('int')
+# maze_img = maze_img >= thresh
+# maze_img = maze_img.astype('int')
 
 # Remove all 1 lines and columns from maze
 maze_img_cpy = np.copy(maze_img)
-maze_img[np.where(maze_img_cpy.all(1)), :] = 0 
-maze_img[:, np.where(maze_img_cpy.all(0))] = 0
+# maze_img[np.where(np.all(maze_img_cpy > thresh, axis=1)), :] = 0
+# maze_img[:, np.where(np.all(maze_img_cpy > thresh, axis=0))] = 0
 
-plt.imshow(maze_img, cmap='gray', vmin=0, vmax=1)
+plt.imshow(maze_img, cmap='gray', vmin=0, vmax=255)
 # plt.show()
 
+maze_img[maze_img < thresh] = 0
+maze_img[maze_img > thresh] = 1
+
+c = 1 + 1e6 * maze_img
+# c = np.ones(np.shape(maze_img))*255
+dx = (1, 1)
+order = 2
 
 
-src_point = (383, 814)
+def eikonal_path(maze, x_s, x_t):
 
-# Init T0 matrix and colors labels
-T0 = np.empty(np.shape(maze_img))
-T0[:,:] = float('inf')
-T0[src_point] = 0
+    tau_fm = eikonalfm.fast_marching(c, x_s, dx, order)
 
-# Init F(x,y) 
-F = np.copy(maze_img)
-dimY = np.shape(maze_img)[0]
-dimX = np.shape(maze_img)[1]
+    # plt.contourf(tau_fm)
+    # plt.show()
 
-# Define each step iteration calculation
+    dimY = np.shape(maze)[0]
+    dimX = np.shape(maze)[1]
 
-def step(T, F):
-    T_cpy = np.copy(T)
-    for i in np.arange(dimY):
-        for j in np.arange(dimX):
-            if T_cpy[i,j] == float('inf'):
-                T_north = T_cpy[i-1,j] if i > 0 else float('inf')
-                T_south = T_cpy[i+1,j] if i < dimY-1 else float('inf')
-                T_east = T_cpy[i,j-1] if j > 0 else float('inf')
-                T_west = T_cpy[i,j+1] if j < dimX-1 else float('inf')
-                T1 = min(T_north, T_south)
-                T2 = min(T_east, T_west)
-                if abs(T1-T2) < F[i,j]:
-                    T[i,j]=(T1+T2+np.sqrt(2*F[i,j]**2-(T1-T2)**2))/2
-                else:
-                    T[i,j] = min(T1,T2) + F[i,j]
-    return T
-            
+    path = [x_t]
+    while not path[-1] == x_s:
+        i = path[-1][0]
+        j = path[-1][1]
+        T_north = tau_fm[i - 1, j] if i > 0 else float('inf')
+        T_south = tau_fm[i + 1, j] if i < dimY - 1 else float('inf')
+        T_east = tau_fm[i, j - 1] if j > 0 else float('inf')
+        T_west = tau_fm[i, j + 1] if j < dimX - 1 else float('inf')
+        tuples = [(i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1)]
+        ind_min = np.argmin([T_north, T_south, T_east, T_west])
+        next_node = tuples[ind_min]
+        path.append(next_node)
 
-# iterate untill convergence
-threshold = 1e-2
-T = T0
-break_condition = False
-iter = 0
-while not break_condition:
-    iter = iter + 1
-    T_next = step(T,F)
-    T = T_next
-    plt.imshow(T == float('inf'))
-    plt.show()
+    image_file_path = np.copy(image_file_original)
+    path_array = np.array(path)
+    plt.imshow(image_file_path)
+    plt.scatter(path_array[:, 1], path_array[:, 0], s=3, c='red')
+    plt.title('Shortest path from ' + str(x_s) + ' to ' + str(x_t))
 
 
+
+x_s = (383, 814)
+x_t = (233, 8)
+plt.figure(1)
+eikonal_path(maze_img,x_s,x_t)
+# plt.show()
+plt.figure(2)
+eikonal_path(maze_img,x_t,x_s)
+plt.show()
+
+print('ya')
