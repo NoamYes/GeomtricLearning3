@@ -1,2 +1,8 @@
 numpy
+meshio
+matplotlib
 opencv-python
+tvb-gdist
+eikonalfm
+pyvista
+scipy
