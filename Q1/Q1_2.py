@@ -1,10 +1,7 @@
 import numpy as np
 import eikonalfm
-import networkx as nx
 import matplotlib.pyplot as plt
-from PIL import Image
 from scipy.io import loadmat
-
 from Q1.shortest_paths import eikonal_path_grad
 
 # Prepare the image
@@ -18,11 +15,10 @@ plt.imshow(ref_mat, cmap='jet')
 (dimY, dimX) = np.shape(ref_mat)
 x_s = (0, 0)
 x_t = (499, 399)
-dx = (0.5, 0.5)
-order = 1
+dx = (1, 1)
+order = 2
 
-
-tau_fm = eikonalfm.fast_marching(1/ref_mat, x_s, dx, order)
+tau_fm = eikonalfm.fast_marching(1/ref_mat**4, x_s, dx, order)
 plt.figure(2)
 plt.imshow(tau_fm, cmap='jet')
 # plt.show()

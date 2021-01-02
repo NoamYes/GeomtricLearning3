@@ -3,7 +3,6 @@ import eikonalfm
 import networkx as nx
 import matplotlib.pyplot as plt
 from PIL import Image
-
 from Q1.shortest_paths import eikonal_path_grad
 
 # Prepare the image

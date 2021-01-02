@@ -2,7 +2,8 @@ import numpy as np
 import eikonalfm
 import matplotlib.pyplot as plt
 
-def eikonal_path_grad(tau, source, target, org_mat):
+
+def eikonal_path_grad(tau, source, target, org_mat=None):
 
     path_points = np.array([target], ndmin=2)
     path_indices = np.array([target], ndmin=2)
@@ -20,12 +21,14 @@ def eikonal_path_grad(tau, source, target, org_mat):
         path_indices = np.append(path_indices, next_indices, axis=0)
         path_points = np.append(path_points, next_point, axis=0)
 
+    if not (org_mat is None):
+        image_file_path = np.copy(org_mat)
+        path_array = np.array(path_indices)
+        plt.imshow(image_file_path,  cmap='jet')
+        plt.scatter(path_array[:, 1], path_array[:, 0], s=3, c='green')
+        plt.title('Negative Gradient - Shortest path from ' + str(source) + ' to ' + str(target))
 
-    image_file_path = np.copy(org_mat)
-    path_array = np.array(path_indices)
-    plt.imshow(image_file_path,  cmap='jet')
-    plt.scatter(path_array[:, 1], path_array[:, 0], s=3, c='green')
-    plt.title('Negative Gradient - Shortest path from ' + str(source) + ' to ' + str(target))
+    return path_indices, path_points
 
 def eikonal_path(tau, source, target):
 
