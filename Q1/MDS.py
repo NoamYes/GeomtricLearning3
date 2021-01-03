@@ -74,10 +74,11 @@ def Diffusion_Maps(Z, kernel_method, epsilon, n_neighbor, d, t=100, **kwargs):
     return Z_reduced
 
 
-def Locally_Linear_Embedding(Z, n_neighbor, epsilon, d, t=10, **kwargs):
+def Locally_Linear_Embedding(Z, n_neighbor, epsilon, d, aff_mat=None, t=10, **kwargs):
     N = Z.shape[0]
     m = Z.shape[1]
-    aff_mat = AffinityMat(Z, kernel_method='Unit', n_neighbor=n_neighbor, epsilon=epsilon, **kwargs)
+    if aff_mat is None:
+        aff_mat = AffinityMat(Z, kernel_method='Unit', n_neighbor=n_neighbor, epsilon=epsilon, **kwargs)
     W = np.zeros((N, N))
     # Compute optimal weights
     for i in np.arange(N):
