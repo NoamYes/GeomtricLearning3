@@ -1,2 +1,7 @@
 HW3_Resources.zip
 /HW3_Resources
+.vscode/settings.json
+*pyc
+MPI-FAUST
+VTP_source_code-master
+*gdist.obj
