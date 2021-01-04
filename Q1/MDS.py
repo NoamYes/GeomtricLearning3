@@ -79,6 +79,10 @@ def Locally_Linear_Embedding(Z, n_neighbor, epsilon, d, aff_mat=None, t=10, **kw
     m = Z.shape[1]
     if aff_mat is None:
         aff_mat = AffinityMat(Z, kernel_method='Unit', n_neighbor=n_neighbor, epsilon=epsilon, **kwargs)
+    else:
+        aff_mat = kneighbors_graph(aff_mat, n_neighbors=n_neighbor)
+        # Make the adj_mat symmetric
+        aff_mat = np.maximum(aff_mat.toarray(), aff_mat.toarray().T)
     W = np.zeros((N, N))
     # Compute optimal weights
     for i in np.arange(N):
