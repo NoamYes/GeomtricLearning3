@@ -13,24 +13,22 @@ from utils.mesh_tools import Mesh
 def create_from_ply(ply_name=None, write=False, read=False):
     path = './HW3_Resources/' + ply_name + '.ply'
     path_write = './obj_cache/'
+    ply_obj, obj_mesh, obj_gdist = [], [], []
     ply_obj = meshio.read(path)
     if write == True:
-        filehandler = open(path_write + ply_name + '.obj', 'wb') 
-        pickle.dump(ply_obj, filehandler)
+        np.save(path_write + ply_name + '.obj', ply_obj)
         mesh_vertices = ply_obj.points
         mesh_faces = ply_obj.cells_dict['triangle']
         obj_mesh = Mesh(mesh_vertices, np.c_[3*np.ones(np.shape(mesh_faces)[0]), mesh_faces])
-        filehandler = open(path_write + ply_name + '_mesh.obj', 'wb') 
-        pickle.dump(obj_mesh, filehandler)
+        np.save(path_write + ply_name + '_mesh.obj', obj_mesh)
         obj_gdist = gdist.local_gdist_matrix(mesh_vertices.astype(np.float64), mesh_faces.astype(np.int32))
-        filehandler = open(path_write + ply_name + '_gdist.obj', 'wb') 
-        pickle.dump(obj_gdist, filehandler)
-    elif read == True:
+        np.save(path_write + ply_name + '_gdist.obj', obj_gdist)
+    else:
         try:
-            file_obj = open(path_write + ply_name + '.obj', 'rb') 
-            ply_obj = pickle.load(file_obj, encoding='utf8')
-            file_obj = open(path_write + ply_name + '_mesh.obj', 'rb') 
-            obj_mesh = pickle.load(file_obj, encoding='utf8')
+            # file_obj = open(path_write + ply_name + '.obj', 'rb') 
+            # ply_obj = pickle.load(file_obj, encoding='utf8')
+            # file_obj = open(path_write + ply_name + '_mesh.obj', 'rb') 
+            # obj_mesh = pickle.load(file_obj, encoding='utf8')
             file_obj = open(path_write + ply_name + '_gdist.obj', 'rb') 
             obj_gdist = pickle.load(file_obj, encoding='utf8')
         except  EOFError:
