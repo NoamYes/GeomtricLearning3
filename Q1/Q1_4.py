@@ -7,20 +7,24 @@ import scipy
 from sklearn.manifold import LocallyLinearEmbedding
 from sklearn.manifold import MDS
 
+
 from MDS import Locally_Linear_Embedding
 from utils.mesh_tools import Mesh
-from utils.create_from_ply import create_from_ply
+from Q1.utils.create_from_ply import create_from_ply
 
 
 # Create from ply and read gdist from file
+
 ply_obj, obj_gdist = create_from_ply(ply_name='tr_reg_000', write=False, read=True)
 
 
 ## Plot original mesh
 
+ply_name = 'tr_reg_000.ply'
+path_read = 'HW3_Resources/' + ply_name
 mesh_vertices = ply_obj.points
 mesh_faces = ply_obj.cells_dict['triangle']
-obj_mesh = Mesh(mesh_vertices, np.c_[3*np.ones(np.shape(mesh_faces)[0]), mesh_faces])
+obj_mesh = Mesh('ply', path_read)
 # plt.figure(1)
 
 # obj_mesh.render_surface(ply_obj.points, cmap_name='winter')
@@ -60,7 +64,7 @@ for i, n_neighbor in enumerate(neighbors_list):
     ## Load the standard MDS
     # p_reduced_MDS = np.load('p_reduced_MDS.npy')
 
-    p_MDS_mesh = Mesh(p_reduced_MDS.real, obj_mesh.f)
+    p_MDS_mesh = Mesh('vf', p_reduced_MDS.real, obj_mesh.f)
 
     p_MDS_mesh.render_surface(p_MDS_mesh.v.real, cmap_name='winter')
     plt.show()
@@ -79,7 +83,7 @@ for i, n_neighbor in enumerate(neighbors_list):
 
 
     # plt.figure(2+i)
-    p_sphere_mesh = Mesh(p_reduced_sphere, obj_mesh.f)
+    p_sphere_mesh = Mesh('vf', p_reduced_sphere, obj_mesh.f)
 
     p_sphere_mesh.render_surface(p_sphere_mesh.v.real, cmap_name='winter')
 

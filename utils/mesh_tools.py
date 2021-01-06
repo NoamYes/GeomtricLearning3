@@ -2,7 +2,8 @@ import numpy as np
 import scipy.sparse as sparse
 import pyvista as pv
 from matplotlib import cm
-
+import meshio
+import scipy.sparse
 
 def read_off(path):
     # The function receives a path of a file, and given an .off file, it returns a tuple of two ndarrays,
@@ -40,9 +41,21 @@ def write_off(path, v, f):
 
 class Mesh:
 
-    def __init__(self, v, f): #off_path
-        # (self.v, self.f) = read_off(off_path)  # Basic definition of the mesh. Read off the given .off file
-        (self.v, self.f) = (v, f.astype('int'))
+    def __init__(self, loadType, *args): #off_path
+        if loadType == 'off':
+            off_path = args[0]
+            (self.v, self.f) = read_off(off_path)  # Basic definition of the mesh. Read off the given .off file
+        elif loadType == 'ply':
+            ply_path = args[0]
+            ply_obj = meshio.read(ply_path)  # Read from ply via Meshio
+            self.v = ply_obj.points.astype(np.float)
+            f = ply_obj.cells_dict['triangle']
+            self.f = np.c_[3*np.ones(np.shape(f)[0]), f].astype(np.int32)
+        elif loadType == 'vf':
+            self.v, self.f = args[0].astype(np.float), args[1].astype(np.int32)
+        else:
+            raise('Wrong loadType')
+
         self.vf_adj_mat = self.vertex_face_adjacency()  # Define the Vertex-Face adjacency matrix for the mesh
         self.vv_adj_mat = self.vertex_vertex_adjacency()  # Define the Vertex-Vertex adjacency matrix for the mesh
         self.v_deg_vec = self.vertex_degree()  # Define the Vertex degree vector for the mesh.
@@ -52,6 +65,7 @@ class Mesh:
         self.fa_map = self.face_areas()
         self.va_map = self.barycentric_vertex_areas()
         self.vn_map = self.vertex_normals()
+        self.w_adj = self.weighted_adjacency(cls='half_cotangent')
         # self.gc_map = self.gaussian_curvature()
 
     def vertex_face_adjacency(self):
@@ -250,57 +264,24 @@ class Mesh:
         if standalone == 1:
             plotter.show()
 
-
-if __name__ == '__main__':
-
-    # Section 4:
-    # M = Mesh('example_off_files/sphere_s0.off')
-    # M = Mesh('example_off_files/disk.off')
-    # M = Mesh('example_off_files/teddy171.off')
-    # plotter = pv.Plotter(shape=(2, 2))
-    # plotter.subplot(0, 0)
-    # M.render_wireframe(plotter=plotter)
-    # plotter.subplot(0, 1)
-    # M.render_pointcloud(scalar_func=M.v, cmap_name="viridis", plotter=plotter)
-    # plotter.subplot(1, 0)
-    # M.render_surface(scalar_func=np.random.random([len(M.f), 1]), cmap_name="Blues", plotter=plotter)
-    # plotter.subplot(1, 1)
-    # M.render_surface(scalar_func=np.random.random([len(M.v), 1]), cmap_name="Blues", plotter=plotter)
-    # plotter.show()
-
-    # Section 6b
-    # M = Mesh('example_off_files/sphere_s0.off')
-    # M = Mesh('example_off_files/disk.off')
-    # M = Mesh('example_off_files/teddy171.off')
-    # plotter = pv.Plotter(shape=(1, 2))
-    # plotter.subplot(0, 0)
-    # M.render_surface(scalar_func=M.va_map, cmap_name="Blues", plotter=plotter)
-    # plotter.subplot(0, 1)
-    # M.render_surface(scalar_func=M.fa_map, cmap_name="Blues", plotter=plotter)
-    # plotter.show()
-
-    # Section 6c
-    # M = Mesh('example_off_files/sphere_s0.off')
-    # M = Mesh('example_off_files/disk.off')
-    M = Mesh('example_off_files/teddy171.off')
-    plotter = pv.Plotter(shape=(2, 2))
-    plotter.subplot(0, 0)
-    M.render_surface(scalar_func=M.vn_map, cmap_name="Blues", plotter=plotter)
-    plotter.subplot(0, 1)
-    M.render_surface(scalar_func=M.fn_map, cmap_name="Blues", plotter=plotter)
-    plotter.subplot(1, 0)
-    M.render_surface(scalar_func=M.vertex_normals(False), cmap_name="Blues", plotter=plotter)
-    M.visualize_normals(normalized=False, plotter=plotter, f_flag=False, mag=30)
-    plotter.subplot(1, 1)
-    M.render_surface(scalar_func=M.face_normals(False), cmap_name="Blues", plotter=plotter)
-    M.visualize_normals(normalized=False, plotter=plotter,  v_flag=False, mag=30)
-    plotter.show()
-
-    # Section 6d
-    # M = Mesh('example_off_files/sphere_s0.off')
-    # M = Mesh('example_off_files/disk.off')
-    # M = Mesh('example_off_files/teddy171.off')
-    # M.visualize_centroid(cmap_name="jet")
-
-
-
+    def weighted_adjacency(self, cls='half_cotangent'):
+        vv_adj_mat = self.vv_adj_mat
+        if cls == 'half_cotangent':
+            cotangent_mat = np.zeros(np.shape(vv_adj_mat))
+            adj_ones = scipy.sparse.find(vv_adj_mat)[0:2]
+            for i, j in zip(*adj_ones):
+                vi_faces = np.squeeze(self.vf_adj_mat[i].toarray())
+                vj_faces = np.squeeze(self.vf_adj_mat[j].toarray())
+                comm_faces = np.where(np.logical_and(vi_faces, vj_faces))[0]
+                sum_ang = 0
+                for f_ind in comm_faces:
+                    k_idx = np.where(np.logical_not(np.logical_or(self.f[f_ind,1:] == i, self.f[f_ind,1:]== j)))[0]
+                    k = int(self.f[f_ind, k_idx+1])
+                    edge0 = self.v[i]-self.v[k]
+                    edge1 = self.v[j]-self.v[k]
+                    angle = np.arccos(np.dot(edge0/np.linalg.norm(edge0), edge1/np.linalg.norm(edge1)))
+                    sum_ang = sum_ang + 1/np.tan(angle)
+                cotangent_mat[i,j] = (1/2)*sum_ang
+                return cotangent_mat
+        else:
+            return vv_adj_mat
