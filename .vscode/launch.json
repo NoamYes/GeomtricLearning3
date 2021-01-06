@@ -10,6 +10,13 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Q1_5",
+            "type": "python",
+            "request": "launch",
+            "program": "Q1/Q1_5.py",
+            "console": "integratedTerminal"
         }
     ]
 }

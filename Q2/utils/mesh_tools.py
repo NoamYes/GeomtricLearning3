@@ -52,7 +52,7 @@ class Mesh:
         self.fa_map = self.face_areas()
         self.va_map = self.barycentric_vertex_areas()
         self.vn_map = self.vertex_normals()
-        self.gc_map = self.gaussian_curvature()
+        # self.gc_map = self.gaussian_curvature()
 
     def vertex_face_adjacency(self):
         # The function returns the Vertex-Face adjacency matrix of the mesh, as a boolean sparse matrix of size
