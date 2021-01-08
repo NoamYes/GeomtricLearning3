@@ -314,3 +314,13 @@ class Mesh:
         eig_val = np.round(eig_val, decimals=12)
         eig_vec = np.round(eig_vec, decimals=12)
         return eig_val, eig_vec
+    
+    def mean_curvature(self, cls='half_cotangent'):
+        M = self.barycenter_vertex_mass_matrix()
+        L = self.laplacian(cls=cls)
+        M_inv = linalg.inv(M)
+        H_n = M_inv @ L @ self.v
+        H_abs = np.linalg.norm(H_n, axis=1) / np.linalg.norm(self.vn_map, axis=1)
+        MUL = self.vn_map @ H_n.T
+        H = H_abs * np.sign(MUL.diagonal())
+        return H

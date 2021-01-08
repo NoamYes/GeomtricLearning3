@@ -32,5 +32,4 @@ plotter = plotters[0]
 # plotter.add_text('Uniform')
 plotter.show()
 
-
 print('ya')
