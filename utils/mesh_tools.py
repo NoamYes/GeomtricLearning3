@@ -1,9 +1,9 @@
 import numpy as np
-import scipy.sparse as sparse
 import pyvista as pv
 from matplotlib import cm
 import meshio
-import scipy.sparse
+import scipy.sparse as sparse
+import scipy.sparse.linalg as linalg
 
 def read_off(path):
     # The function receives a path of a file, and given an .off file, it returns a tuple of two ndarrays,
@@ -54,7 +54,7 @@ class Mesh:
         elif loadType == 'vf':
             self.v, self.f = args[0].astype(np.float), args[1].astype(np.int32)
         else:
-            raise('Wrong loadType')
+            raise(NameError('Wrong loadType'))
 
         self.vf_adj_mat = self.vertex_face_adjacency()  # Define the Vertex-Face adjacency matrix for the mesh
         self.vv_adj_mat = self.vertex_vertex_adjacency()  # Define the Vertex-Vertex adjacency matrix for the mesh
@@ -65,7 +65,10 @@ class Mesh:
         self.fa_map = self.face_areas()
         self.va_map = self.barycentric_vertex_areas()
         self.vn_map = self.vertex_normals()
-        self.w_adj = self.weighted_adjacency(cls='half_cotangent')
+        # self.w_adj = self.weighted_adjacency(cls='half_cotangent')
+        # self.lap = self.laplacian(cls='half_cotangent')
+        # self.bc_v_mass_mat = self.barycenter_vertex_mass_matrix()
+
         # self.gc_map = self.gaussian_curvature()
 
     def vertex_face_adjacency(self):
@@ -268,20 +271,46 @@ class Mesh:
         vv_adj_mat = self.vv_adj_mat
         if cls == 'half_cotangent':
             cotangent_mat = np.zeros(np.shape(vv_adj_mat))
-            adj_ones = scipy.sparse.find(vv_adj_mat)[0:2]
+            adj_ones = sparse.find(vv_adj_mat)[0:2]
             for i, j in zip(*adj_ones):
-                vi_faces = np.squeeze(self.vf_adj_mat[i].toarray())
-                vj_faces = np.squeeze(self.vf_adj_mat[j].toarray())
-                comm_faces = np.where(np.logical_and(vi_faces, vj_faces))[0]
-                sum_ang = 0
-                for f_ind in comm_faces:
-                    k_idx = np.where(np.logical_not(np.logical_or(self.f[f_ind,1:] == i, self.f[f_ind,1:]== j)))[0]
-                    k = int(self.f[f_ind, k_idx+1])
-                    edge0 = self.v[i]-self.v[k]
-                    edge1 = self.v[j]-self.v[k]
-                    angle = np.arccos(np.dot(edge0/np.linalg.norm(edge0), edge1/np.linalg.norm(edge1)))
-                    sum_ang = sum_ang + 1/np.tan(angle)
-                cotangent_mat[i,j] = (1/2)*sum_ang
-                return cotangent_mat
+                if j > i:
+                    vi_faces = np.squeeze(self.vf_adj_mat[i].toarray())
+                    vj_faces = np.squeeze(self.vf_adj_mat[j].toarray())
+                    comm_faces = np.where(np.logical_and(vi_faces, vj_faces))[0]
+                    sum_ang = 0
+                    for f_ind in comm_faces:
+                        k_idx = np.where(np.logical_not(np.logical_or(self.f[f_ind,1:] == i, self.f[f_ind,1:]== j)))[0]
+                        k = int(self.f[f_ind, k_idx+1])
+                        edge0 = self.v[i]-self.v[k]
+                        edge1 = self.v[j]-self.v[k]
+                        angle = np.arccos(np.dot(edge0/np.linalg.norm(edge0), edge1/np.linalg.norm(edge1)))
+                        sum_ang = sum_ang + 1/np.tan(angle)
+                    A_i = self.va_map[i]
+                    # cotangent_mat[i,j] = (1/(2*A_i))*sum_ang
+                    cotangent_mat[i,j] = sum_ang
+            W = cotangent_mat + cotangent_mat.T
         else:
-            return vv_adj_mat
+            W = vv_adj_mat.astype(np.float64)
+        return sparse.csc_matrix(W)
+
+    def laplacian(self, cls='half_cotangent'):
+        self.w_adj = self.weighted_adjacency(cls=cls)
+        w_deg_mat = np.diag(np.squeeze(np.asarray(self.w_adj.sum(axis=0))))
+        self.w_deg_mat = sparse.csc_matrix(w_deg_mat)
+        return self.w_deg_mat - self.w_adj
+
+    def barycenter_vertex_mass_matrix(self):
+        M = np.diag(self.va_map)
+        return sparse.csc_matrix(M)
+
+    def laplacian_spectrum(self, k, cls):
+        L = self.laplacian(cls=cls)
+        M = self.barycenter_vertex_mass_matrix()
+        eig_val, eig_vec = linalg.eigsh(L, k, M, which='LM', sigma=0, tol=1e-7)
+        idx_pn = eig_val.argsort()[::1] 
+        eig_val = eig_val[idx_pn]  # Rounds up to 9 digits?
+        eig_vec = eig_vec[:, idx_pn]
+
+        eig_val = np.round(eig_val, decimals=12)
+        eig_vec = np.round(eig_vec, decimals=12)
+        return eig_val, eig_vec

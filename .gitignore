@@ -7,3 +7,4 @@ VTP_source_code-master
 *gdist.obj
 /obj_cache
 .env
+*stackdump
