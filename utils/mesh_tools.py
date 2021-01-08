@@ -56,6 +56,8 @@ class Mesh:
         else:
             raise(NameError('Wrong loadType'))
 
+        self.Laps = {}
+
         self.vf_adj_mat = self.vertex_face_adjacency()  # Define the Vertex-Face adjacency matrix for the mesh
         self.vv_adj_mat = self.vertex_vertex_adjacency()  # Define the Vertex-Vertex adjacency matrix for the mesh
         self.v_deg_vec = self.vertex_degree()  # Define the Vertex degree vector for the mesh.
@@ -297,7 +299,8 @@ class Mesh:
         self.w_adj = self.weighted_adjacency(cls=cls)
         w_deg_mat = np.diag(np.squeeze(np.asarray(self.w_adj.sum(axis=0))))
         self.w_deg_mat = sparse.csc_matrix(w_deg_mat)
-        return self.w_deg_mat - self.w_adj
+        self.Laps[cls] = self.w_deg_mat - self.w_adj
+        return self.Laps[cls]
 
     def barycenter_vertex_mass_matrix(self):
         M = np.diag(self.va_map)
@@ -320,7 +323,8 @@ class Mesh:
         L = self.laplacian(cls=cls)
         M_inv = linalg.inv(M)
         H_n = M_inv @ L @ self.v
-        H_abs = np.linalg.norm(H_n, axis=1) / np.linalg.norm(self.vn_map, axis=1)
-        MUL = self.vn_map @ H_n.T
+        vn_map = self.vertex_normals(normalized=False)
+        H_abs = np.linalg.norm(H_n, axis=1) / np.linalg.norm(vn_map, axis=1)
+        MUL = vn_map @ H_n.T
         H = H_abs * np.sign(MUL.diagonal())
         return H
