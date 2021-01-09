@@ -328,3 +328,4 @@ class Mesh:
         MUL = vn_map @ H_n.T
         H = H_abs * np.sign(MUL.diagonal())
         return H
+ 
