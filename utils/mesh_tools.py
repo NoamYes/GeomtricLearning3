@@ -56,12 +56,14 @@ class Mesh:
         else:
             raise(NameError('Wrong loadType'))
 
+        self.Laps = {}
+
         self.vf_adj_mat = self.vertex_face_adjacency()  # Define the Vertex-Face adjacency matrix for the mesh
         self.vv_adj_mat = self.vertex_vertex_adjacency()  # Define the Vertex-Vertex adjacency matrix for the mesh
         self.v_deg_vec = self.vertex_degree()  # Define the Vertex degree vector for the mesh.
         self.fv_map = self.face_vertex_map()  # Define the Face-Vertex map - being a form of self.f with explicit vertex values (used for calculations)
-        self.fn_map = self.face_normals()  #
-        self.fbc_map = self.face_barycenters()
+        # self.fn_map = self.face_normals()  #
+        # self.fbc_map = self.face_barycenters()
         self.fa_map = self.face_areas()
         self.va_map = self.barycentric_vertex_areas()
         self.vn_map = self.vertex_normals()
@@ -297,7 +299,8 @@ class Mesh:
         self.w_adj = self.weighted_adjacency(cls=cls)
         w_deg_mat = np.diag(np.squeeze(np.asarray(self.w_adj.sum(axis=0))))
         self.w_deg_mat = sparse.csc_matrix(w_deg_mat)
-        return self.w_deg_mat - self.w_adj
+        self.Laps[cls] = self.w_deg_mat - self.w_adj
+        return self.Laps[cls]
 
     def barycenter_vertex_mass_matrix(self):
         M = np.diag(self.va_map)
@@ -307,6 +310,7 @@ class Mesh:
         L = self.laplacian(cls=cls)
         M = self.barycenter_vertex_mass_matrix()
         eig_val, eig_vec = linalg.eigsh(L, k, M, which='LM', sigma=0, tol=1e-7)
+        # eig_val, eig_vec = np.linalg.eigh(L)
         idx_pn = eig_val.argsort()[::1] 
         eig_val = eig_val[idx_pn]  # Rounds up to 9 digits?
         eig_vec = eig_vec[:, idx_pn]
@@ -318,9 +322,11 @@ class Mesh:
     def mean_curvature(self, cls='half_cotangent'):
         M = self.barycenter_vertex_mass_matrix()
         L = self.laplacian(cls=cls)
-        M_inv = linalg.inv(M)
+        M_inv = np.diag(1/np.diagonal(M.toarray()))
         H_n = M_inv @ L @ self.v
-        H_abs = np.linalg.norm(H_n, axis=1) / np.linalg.norm(self.vn_map, axis=1)
-        MUL = self.vn_map @ H_n.T
+        vn_map = self.vertex_normals(normalized=False)
+        H_abs = np.linalg.norm(H_n, axis=1) / np.linalg.norm(vn_map, axis=1)
+        MUL = vn_map @ H_n.T
         H = H_abs * np.sign(MUL.diagonal())
         return H
+ 
