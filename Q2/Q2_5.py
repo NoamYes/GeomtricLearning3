@@ -12,7 +12,7 @@ path_read = 'HW3_Resources/' + ply_name
 obj_mesh = Mesh('ply', path_read)
 ply_obj, obj_gdist = create_from_ply(ply_name='tr_reg_000', write=False, read=True)
 gdist_dist = obj_gdist[:,900]
-cls_s = ['half_cotangent']
+cls_s = ['uniform']
 
 # def euc_dist_func(vertices):
 #     return np.linalg.norm(vertices, axis=1)
@@ -63,7 +63,8 @@ for i, cls_ in enumerate(cls_s):
     scalar_func = M_inv @ L @ func
     thresh_max = np.mean(scalar_func) + np.std(scalar_func)
     thresh_min = np.mean(scalar_func) - np.std(scalar_func)
-    scalar_func = np.clip(scalar_func, thresh_min, thresh_max)
+    scalar_func = np.sign(scalar_func)*np.log10(np.abs(scalar_func))
+    # scalar_func = np.clip(scalar_func, thresh_min, thresh_max)
     plotter = pv.Plotter()
     obj_mesh.render_surface(scalar_func, cmap_name='winter', plotter=plotter)
     plotter.add_scalar_bar()

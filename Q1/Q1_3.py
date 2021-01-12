@@ -5,6 +5,7 @@ from PIL import Image
 from shortest_paths import eikonal_path_grad
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
 import eikonalfm
 from scipy.spatial import ConvexHull
 import gif as gif
@@ -22,7 +23,8 @@ def compute_geodesic(c_field, p1, p2):
     return path_indices, path_points, path_len, midway_point
 
 
-def geodesic_image_segmentation(img, sigma, ksize, init_points):
+
+def geodesic_image_segmentation(img, sigma, ksize, init_points, power):
 
     (dimY, dimX, dimC) = np.shape(img)
     gaus_kernel = cv2.getGaussianKernel(ksize=ksize, sigma=sigma)
@@ -36,7 +38,7 @@ def geodesic_image_segmentation(img, sigma, ksize, init_points):
         grads_image = grads_image + [gx_image, gy_image]
 
     grads_arrays = np.stack(grads_image, axis=2)
-    g_image = 1 / (1 + np.linalg.norm(grads_arrays, axis=2))
+    g_image = 1 / (1 + np.linalg.norm(grads_arrays, axis=2))**power
 
     plt.figure(1)
     plt.imshow(g_image, cmap='jet')
@@ -50,62 +52,46 @@ def geodesic_image_segmentation(img, sigma, ksize, init_points):
     next_eps = diff_eps
     diff_eps_list = [diff_eps]
     iter = 0
+    frames = []
+    GAC_list = []
     while diff_eps > epsilon and iter < 20:
         iter = iter + 1
         curr_eps = next_eps
         next_eps = 0
         GAC = np.empty((0, 2))
-        fig, ax = plt.subplots()
-        frames = []
         for i in range(4):
             p1 = tuple(curr_points[i].astype('int'))
             p2 = tuple(curr_points[(i + 1) % 4].astype('int'))
-            geo_indices, geo_points, path_len, midway_point = compute_geodesic(g_image**5, p1, p2)
+            geo_indices, geo_points, path_len, midway_point = compute_geodesic(g_image, p1, p2)
             next_points[i] = midway_point
             next_eps = next_eps + path_len
             GAC = np.vstack([GAC, geo_indices])
         curr_points = next_points
         diff_eps = abs(curr_eps-next_eps)
-        image_file_path = np.copy(duck_img)
-        plt.imshow(image_file_path, cmap='gray')
-        frame = plt.scatter(GAC[:, 1], GAC[:, 0], s=3, c='green')
-        plt.show()
-        frames.append(frame)
-    gif.save(frames, 'example.gif', duration=6.5, unit="s", between="startend")
-    return GAC
-
-
-# def create_mask(img, GAC):
-    # def isInHull(P,hull):
-    #     A = hull.equations[:,0:-1]
-    #     b = np.transpose(np.array([hull.equations[:,-1]]))
-    #     isInHull = np.all((A @ np.transpose(P)) <= np.tile(-b,(1,len(P))),axis=0)
-
-    # hull = ConvexHull(GAC)
-    # (dimY, dimX, dimC) = np.shape(img)
-    # ids = np.indices(np.shape(img))
-    # ids = ids.reshape(2,dimX*dimY/2)
-    # pointsInHull = isInHull(ids, hull)
-
-
-
-
+        GAC_list.append(GAC)
+    return GAC_list, frames
 
 
 # Load image to ndarray
-image_file_original = Image.open("./Q1/duck.png")  # open colour image
-# image_file_original = Image.open("./present.png")  # open colour image
-# image_file_original = Image.open("./some_ball.jpg")  # open colour image
-# image_file_original = Image.open("./japan.png")  # open colour image
-# image_file_original = Image.open("./israel.png")  # open colour image
+# fileName = 'duck.png' # power = 5 and sigma=10 ksize=10
+# fileName = 'present.png' 
+# fileName = 'some_ball.jpg' # power=1 sigma 10 ksize = 7
+# fileName = 'orange.jpeg' # power=2 sigma 20 ksize = 10
+fileName = 'pineapple.jpg' # power=1 sigma 20 ksize = 20
+# fileName = 'japan.png' # power=4 sigma 10 ksize = 7
+# fileName = 'Israel.png' # power=1 sigma 10 ksize = 7
+
+
+image_file_original = Image.open("./Q1/" + fileName)  # open colour image
 image_file = image_file_original.convert("RGB")
 duck_img = np.asarray(image_file)
 
 dimX = np.shape(duck_img)[1]
 dimY = np.shape(duck_img)[0]
 
-sigma = 10
-ksize = 10
+sigma = 20
+ksize = 20
+power = 4
 
 init_points = np.zeros((4, 2))
 init_points[0] = [0, 0]
@@ -113,5 +99,28 @@ init_points[1] = [0, dimX - 1]
 init_points[2] = [dimY - 1, dimX - 1]
 init_points[3] = [dimY - 1, 0]
 
-geodesic_image_segmentation(duck_img, sigma, ksize, init_points)
-print('ya')
+GAC_list, frames = geodesic_image_segmentation(duck_img, sigma, ksize, init_points, power)
+
+fig3 = plt.figure(3)
+im_show = plt.imshow(duck_img, cmap='gray')
+scat = plt.scatter(0, 0, s=3, c='green')
+
+def initFunc():
+    scat = plt.scatter(0, 0, s=3, c='green')
+    return scat, 
+
+def updatefig(j, *fargs):
+    global scat
+    scat.remove()
+    GAC_list = fargs
+    GAC = GAC_list[j]
+    scat = plt.scatter(GAC[:, 1], GAC[:, 0], s=3, c='green')
+    return (scat, )
+
+fargs = GAC_list
+
+ani = matplotlib.animation.FuncAnimation(fig3, updatefig, fargs=fargs, 
+                              frames=range(len(GAC_list)), interval=10, blit=True)
+path_gifs = "./Q1/gifs/"
+ani.save(path_gifs + fileName + '.gif', writer = 'imagemagick', fps = 3) 
+
