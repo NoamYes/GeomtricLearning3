@@ -31,5 +31,3 @@ for i, cls_ in enumerate(cls_s):
 plotter = plotters[0]
 # plotter.add_text('Uniform')
 plotter.show()
-
-print('ya')

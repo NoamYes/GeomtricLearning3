@@ -14,41 +14,41 @@ ply_obj, obj_gdist = create_from_ply(ply_name='tr_reg_000', write=False, read=Tr
 gdist_dist = obj_gdist[:,900]
 cls_s = ['uniform']
 
-# def euc_dist_func(vertices):
-#     return np.linalg.norm(vertices, axis=1)
+def euc_dist_func(vertices):
+    return np.linalg.norm(vertices, axis=1)
 
 ## Compute the Laplacian eigen Decomposition
 
 ## Euclidean Distance - up to k bandwidth
 
-# k = 5
-# k_list = [2, 12, 30, 100]
+k = 5
+k_list = [2, 12, 30, 100]
 
-# for i, cls_ in enumerate(cls_s):
-#     plotter = pv.Plotter(shape=(1, len(k_list)))
-#     eig_vals_lap, eig_vecs_lap = obj_mesh.laplacian_spectrum(k=max(k_list), cls=cls_)
-#     for j, k in enumerate(k_list):
-#         plotter.subplot(0, j)
-#         plotter.add_text('k = ' + str(k))
-#         # func = np.linalg.norm(obj_mesh.v, axis=1) ## Euclidean
-#         # func = obj_mesh.va_map
-#         func = gdist_dist
-#         M = obj_mesh.barycenter_vertex_mass_matrix()
-#         scalar_func = eig_vecs_lap[:,:k] @ eig_vecs_lap[:,:k].T @ M @ func
-#         obj_mesh.render_surface(scalar_func, cmap_name='winter', plotter=plotter)
-#         plotter.add_scalar_bar()
-#     plotter.show(auto_close=False)
+for i, cls_ in enumerate(cls_s):
+    plotter = pv.Plotter(shape=(1, len(k_list)))
+    eig_vals_lap, eig_vecs_lap = obj_mesh.laplacian_spectrum(k=max(k_list), cls=cls_)
+    for j, k in enumerate(k_list):
+        plotter.subplot(0, j)
+        plotter.add_text('k = ' + str(k))
+        # func = np.linalg.norm(obj_mesh.v, axis=1) ## Euclidean
+        # func = obj_mesh.va_map
+        func = gdist_dist
+        M = obj_mesh.barycenter_vertex_mass_matrix()
+        scalar_func = eig_vecs_lap[:,:k] @ eig_vecs_lap[:,:k].T @ M @ func
+        obj_mesh.render_surface(scalar_func, cmap_name='winter', plotter=plotter)
+        plotter.add_scalar_bar()
+    plotter.show(auto_close=False)
 
 ## Euclidean Distance - Full bandwidth 
 
-# func = np.linalg.norm(obj_mesh.v, axis=1) ## Euclidean
-# func = obj_mesh.va_map
-# func = gdist_dist.toarray()
-# plotter = pv.Plotter()    
-# obj_mesh.render_surface(func, cmap_name='winter', plotter=plotter)
-# plotter.add_scalar_bar()
-# plotter.add_text('Full Bandwidth Euclidean Distance')
-# plotter.show()
+func = np.linalg.norm(obj_mesh.v, axis=1) ## Euclidean
+func = obj_mesh.va_map
+func = gdist_dist.toarray()
+plotter = pv.Plotter()    
+obj_mesh.render_surface(func, cmap_name='winter', plotter=plotter)
+plotter.add_scalar_bar()
+plotter.add_text('Full Bandwidth Euclidean Distance')
+plotter.show()
 
  
 ## Function Laplacian Euclidean Distance 
@@ -69,5 +69,3 @@ for i, cls_ in enumerate(cls_s):
     obj_mesh.render_surface(scalar_func, cmap_name='winter', plotter=plotter)
     plotter.add_scalar_bar()
     plotter.show(auto_close=False)
-
-print('ya')

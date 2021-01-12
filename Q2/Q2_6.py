@@ -18,7 +18,7 @@ DNAs, GPSs, HKSs, Hs = [], [], [], []
 D_DNA, D_GPS, D_HKS, D_H = [], [], [], []
 
 # k = np.shape(obj_mesh.v)[0]
-k = 1000
+k = 5
 
 ## Calculate for each FAUST obj the relevent descriptors
 

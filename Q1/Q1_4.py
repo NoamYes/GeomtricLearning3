@@ -102,7 +102,3 @@ for i, n_neighbor in enumerate(neighbors_list):
 
 # fig2.suptitle('Classic and Spherical MDS embedding for ' +  ply_name)
 plt.show()
-
-
-
-print('ya')

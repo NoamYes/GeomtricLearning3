@@ -2,13 +2,13 @@ import numpy as np
 from scipy.signal import convolve2d
 import cv2
 from PIL import Image
-from shortest_paths import eikonal_path_grad
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 import eikonalfm
-from scipy.spatial import ConvexHull
 import gif as gif
+
+from utils.shortest_paths import eikonal_path_grad
 
 gif.options.matplotlib["dpi"] = 300
 
@@ -82,7 +82,7 @@ fileName = 'pineapple.jpg' # power=1 sigma 20 ksize = 20
 # fileName = 'Israel.png' # power=1 sigma 10 ksize = 7
 
 
-image_file_original = Image.open("./Q1/" + fileName)  # open colour image
+image_file_original = Image.open("./Q1/imgs/" + fileName)  # open colour image
 image_file = image_file_original.convert("RGB")
 duck_img = np.asarray(image_file)
 

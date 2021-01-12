@@ -3,8 +3,8 @@ import eikonalfm
 import networkx as nx
 import matplotlib.pyplot as plt
 from PIL import Image
-from Q1.shortest_paths import eikonal_path_grad
-from Q1.shortest_paths import networkx_path
+from utils.shortest_paths import eikonal_path_grad
+from utils.shortest_paths import networkx_path
 
 # Prepare the image
 thresh = 180
@@ -13,7 +13,7 @@ image_file = image_file_original.convert("L")
 maze_img = np.asarray(image_file).astype('int')
 
 plt.imshow(maze_img, cmap='gray', vmin=0, vmax=255)
-# plt.show()
+plt.show()
 
 dimY = np.shape(maze_img)[0]
 dimX = np.shape(maze_img)[1]
@@ -83,5 +83,3 @@ shortest_path = nx.shortest_paths.weighted.dijkstra_path(G, target_node, source_
 plt.figure(5)
 networkx_path(shortest_path, x_t, x_s, visualize_tau)
 plt.show()
-
-print('ya')

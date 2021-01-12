@@ -23,5 +23,3 @@ for i, ply_name in enumerate(ply_objs):
     obj_mesh.render_surface(scalars, cmap_name='winter', plotter=plotter)
     plotter.add_scalar_bar()
     plotter.show(auto_close=False)
-
-print('ya')

@@ -2,7 +2,7 @@ import numpy as np
 import eikonalfm
 import matplotlib.pyplot as plt
 from scipy.io import loadmat
-from shortest_paths import eikonal_path_grad
+from utils.shortest_paths import eikonal_path_grad
 
 # Prepare the image
 thresh = 180
