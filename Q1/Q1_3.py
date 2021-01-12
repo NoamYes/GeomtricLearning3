@@ -2,11 +2,14 @@ import numpy as np
 from scipy.signal import convolve2d
 import cv2
 from PIL import Image
-from Q1.shortest_paths import eikonal_path_grad
+from shortest_paths import eikonal_path_grad
 import numpy as np
 import matplotlib.pyplot as plt
 import eikonalfm
+from scipy.spatial import ConvexHull
+import gif as gif
 
+gif.options.matplotlib["dpi"] = 300
 
 def compute_geodesic(c_field, p1, p2):
     dx = (1, 1)
@@ -46,14 +49,18 @@ def geodesic_image_segmentation(img, sigma, ksize, init_points):
     diff_eps = epsilon*1e4  # TODO
     next_eps = diff_eps
     diff_eps_list = [diff_eps]
-    while diff_eps > epsilon:
+    iter = 0
+    while diff_eps > epsilon and iter < 20:
+        iter = iter + 1
         curr_eps = next_eps
         next_eps = 0
         GAC = np.empty((0, 2))
+        fig, ax = plt.subplots()
+        frames = []
         for i in range(4):
             p1 = tuple(curr_points[i].astype('int'))
             p2 = tuple(curr_points[(i + 1) % 4].astype('int'))
-            geo_indices, geo_points, path_len, midway_point = compute_geodesic(g_image**0.8, p1, p2)
+            geo_indices, geo_points, path_len, midway_point = compute_geodesic(g_image**5, p1, p2)
             next_points[i] = midway_point
             next_eps = next_eps + path_len
             GAC = np.vstack([GAC, geo_indices])
@@ -61,13 +68,32 @@ def geodesic_image_segmentation(img, sigma, ksize, init_points):
         diff_eps = abs(curr_eps-next_eps)
         image_file_path = np.copy(duck_img)
         plt.imshow(image_file_path, cmap='gray')
-        plt.scatter(GAC[:, 1], GAC[:, 0], s=3, c='green')
+        frame = plt.scatter(GAC[:, 1], GAC[:, 0], s=3, c='green')
         plt.show()
+        frames.append(frame)
+    gif.save(frames, 'example.gif', duration=6.5, unit="s", between="startend")
     return GAC
 
 
+# def create_mask(img, GAC):
+    # def isInHull(P,hull):
+    #     A = hull.equations[:,0:-1]
+    #     b = np.transpose(np.array([hull.equations[:,-1]]))
+    #     isInHull = np.all((A @ np.transpose(P)) <= np.tile(-b,(1,len(P))),axis=0)
+
+    # hull = ConvexHull(GAC)
+    # (dimY, dimX, dimC) = np.shape(img)
+    # ids = np.indices(np.shape(img))
+    # ids = ids.reshape(2,dimX*dimY/2)
+    # pointsInHull = isInHull(ids, hull)
+
+
+
+
+
+
 # Load image to ndarray
-image_file_original = Image.open("./duck.png")  # open colour image
+image_file_original = Image.open("./Q1/duck.png")  # open colour image
 # image_file_original = Image.open("./present.png")  # open colour image
 # image_file_original = Image.open("./some_ball.jpg")  # open colour image
 # image_file_original = Image.open("./japan.png")  # open colour image

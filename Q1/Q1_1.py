@@ -3,11 +3,11 @@ import eikonalfm
 import networkx as nx
 import matplotlib.pyplot as plt
 from PIL import Image
-from Q1.shortest_paths import eikonal_path_grad
+from shortest_paths import eikonal_path_grad
 
 # Prepare the image
 thresh = 180
-image_file_original = Image.open("../HW3_Resources/maze.png")  # open colour image
+image_file_original = Image.open("./HW3_Resources/maze.png")  # open colour image
 image_file = image_file_original.convert("L")
 maze_img = np.asarray(image_file).astype('int')
 
@@ -26,9 +26,10 @@ dx = (1, 1)
 order = 2
 x_s = (383, 814)
 tau_fm = eikonalfm.fast_marching(c, x_s, dx, order)
-plt.figure(1)
+fig1 = plt.figure(1)
 plt.title('Eikonal FMM - Maze distance image with source = ' + str(x_s))
-plt.contourf(tau_fm)
+CS = plt.contourf(tau_fm)
+cbar = fig1.colorbar(CS)
 # plt.show()
 
 
@@ -39,11 +40,11 @@ plt.contourf(tau_fm)
 x_t = (233, 8)
 plt.figure(2)
 eikonal_path_grad(tau_fm, x_s, x_t, image_file_original)
-# plt.show()
+plt.show()
 plt.figure(3)
 tau_fm = eikonalfm.fast_marching(c, x_t, dx, order)
 eikonal_path_grad(tau_fm, x_t, x_s, image_file_original)
-# plt.show()
+plt.show()
 
 # Section 1.1.c
 # Create nodes and edges for maze graph

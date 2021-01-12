@@ -21,12 +21,10 @@ def create_from_ply(ply_name=None, write=False, read=False):
         obj_mesh = Mesh(mesh_vertices, np.c_[3*np.ones(np.shape(mesh_faces)[0]), mesh_faces])
         np.save(path_write + ply_name + '_mesh.obj', obj_mesh)
         obj_gdist = gdist.local_gdist_matrix(mesh_vertices.astype(np.float64), mesh_faces.astype(np.int32))
-        np.save(path_write + ply_name + '_gdist.obj', obj_gdist)
+        np.save(path_write + ply_name + '_gdist', obj_gdist)
     else:
         try:
-            file_gdist = open(path_write + ply_name + '_gdist.obj', 'rb') 
-            obj_gdist = pickle.load(file_gdist, encoding='utf8')
-            # obj_gdist = np.load(path_write + ply_name + '_gdist_np_DATA.obj.npy', allow_pickle=True) 
+            obj_gdist = np.load(path_write + ply_name + '_gdist.npy', allow_pickle=True)[()]
         except  EOFError:
             print('EOFError')
     return ply_obj, obj_gdist

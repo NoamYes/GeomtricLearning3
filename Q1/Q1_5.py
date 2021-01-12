@@ -33,13 +33,13 @@ def plot_mesh_sampling_pointcloud(mesh, n, gdist=None, plotter=None):
 
 
 # Create from ply and read gdist from file
-ply_obj, obj_gdist = create_from_ply(ply_name='tr_reg_000', write=False, read=True)
+ply_obj, obj_gdist = create_from_ply(ply_name='tr_reg_047', write=True, read=True)
 
 
 ## Create obj mesh
 mesh_vertices = ply_obj.points
 mesh_faces = ply_obj.cells_dict['triangle']
-obj_mesh = Mesh(mesh_vertices, np.c_[3*np.ones(np.shape(mesh_faces)[0]), mesh_faces])
+obj_mesh = Mesh('ply', './HW3_Resources/tr_reg_047.ply')
 
 # Visualize for different n the farthest_sampling
 

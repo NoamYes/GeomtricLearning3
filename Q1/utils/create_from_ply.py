@@ -24,8 +24,8 @@ def create_from_ply(ply_name=None, write=False, read=False):
         np.save(path_write + ply_name + '_gdist.obj', obj_gdist)
     else:
         try:
-            file_gdist = open(path_write + ply_name + '_gdist.obj', 'rb') 
-            obj_gdist = pickle.load(file_gdist, encoding='utf8')
+            file_gdist = open(path_write + ply_name + '_gdist.npy', 'rb') 
+            obj_gdist = np.load(path_write + ply_name + '_gdist.npy', allow_pickle=True)[()]
             # obj_gdist = np.load(path_write + ply_name + '_gdist_np_DATA.obj.npy', allow_pickle=True) 
         except  EOFError:
             print('EOFError')
