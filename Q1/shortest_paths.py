@@ -16,7 +16,7 @@ def eikonal_path_grad(tau, source, target, org_mat=None):
         curr_point = np.array([x, y])
         grad_point = np.array([gy[i, j], gx[i, j]]).reshape([1, 2])
         next_point = curr_point - grad_point/(np.linalg.norm(grad_point))
-        next_indices = next_point.astype('int').reshape([1, 2])
+        next_indices = np.round(next_point).astype('int').reshape([1, 2])
 
         path_indices = np.append(path_indices, next_indices, axis=0)
         path_points = np.append(path_points, next_point, axis=0)
@@ -25,11 +25,23 @@ def eikonal_path_grad(tau, source, target, org_mat=None):
         image_file_path = np.copy(org_mat)
         path_array = np.array(path_indices)
         plt.imshow(image_file_path,  cmap='jet')
-        plt.scatter(path_array[:, 1], path_array[:, 0], s=3, c='green')
+        plt.scatter(path_array[:, 1], path_array[:, 0], s=3, c='white')
         plt.title('Negative Gradient - Shortest path from ' + str(source) + ' to ' + str(target))
 
     return path_indices, path_points
 
+
+def networkx_path(path, source, target, image):
+    dimX = np.shape(image)[1]
+    path_array = [(int(node/dimX), node % dimX) for node in path]
+    path_array = np.array(path_array)
+
+    plt.imshow(image, cmap='jet')
+    plt.scatter(path_array[:, 1], path_array[:, 0], s=3, c='white')
+    plt.title('Graph Dijkstra - Shortest path from ' + str(source) + ' to ' + str(target))
+
+
+## eikonal_path not used - experimental
 def eikonal_path(tau, source, target):
 
     path = [target]
